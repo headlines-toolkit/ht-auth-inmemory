@@ -64,8 +64,8 @@ class HtAuthInmemory implements HtAuthClient {
   }
 
   @override
-  Future<AuthSuccessResponse> verifySignInCode(String email, String code)
-      async {
+  Future<AuthSuccessResponse> verifySignInCode(
+      String email, String code) async {
     if (!email.contains('@') || !email.contains('.')) {
       throw const InvalidInputException('Invalid email format.');
     }
@@ -82,7 +82,8 @@ class HtAuthInmemory implements HtAuthClient {
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
     _authStateController.add(_currentUser);
-    _pendingCodes.remove(email); // Clear pending code after successful verification
+    _pendingCodes
+        .remove(email); // Clear pending code after successful verification
 
     await Future<void>.delayed(const Duration(milliseconds: 500));
     return AuthSuccessResponse(user: user, token: _currentToken!);
