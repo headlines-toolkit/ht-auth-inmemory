@@ -13,10 +13,7 @@ import 'package:uuid/uuid.dart';
 /// {@endtemplate}
 class HtAuthInmemory implements HtAuthClient {
   /// {@macro ht_auth_inmemory}
-  HtAuthInmemory({
-    this.initialUser,
-    this.initialToken,
-  }) {
+  HtAuthInmemory({this.initialUser, this.initialToken}) {
     _currentUser = initialUser;
     _currentToken = initialToken;
     if (_currentUser != null) {
@@ -65,7 +62,9 @@ class HtAuthInmemory implements HtAuthClient {
 
   @override
   Future<AuthSuccessResponse> verifySignInCode(
-      String email, String code) async {
+    String email,
+    String code,
+  ) async {
     if (!email.contains('@') || !email.contains('.')) {
       throw const InvalidInputException('Invalid email format.');
     }
@@ -82,8 +81,9 @@ class HtAuthInmemory implements HtAuthClient {
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
     _authStateController.add(_currentUser);
-    _pendingCodes
-        .remove(email); // Clear pending code after successful verification
+    _pendingCodes.remove(
+      email,
+    ); // Clear pending code after successful verification
 
     await Future<void>.delayed(const Duration(milliseconds: 500));
     return AuthSuccessResponse(user: user, token: _currentToken!);
@@ -91,10 +91,7 @@ class HtAuthInmemory implements HtAuthClient {
 
   @override
   Future<AuthSuccessResponse> signInAnonymously() async {
-    final user = User(
-      id: _uuid.v4(),
-      role: UserRole.guestUser,
-    );
+    final user = User(id: _uuid.v4(), role: UserRole.guestUser);
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
     _authStateController.add(_currentUser);
