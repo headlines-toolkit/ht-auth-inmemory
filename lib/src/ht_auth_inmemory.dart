@@ -84,7 +84,9 @@ class HtAuthInmemory implements HtAuthClient {
       'DEBUG: HtAuthInmemory Generated code 123456 for $email. Pending codes: $_pendingCodes',
     );
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    print('DEBUG: HtAuthInmemory requestSignInCode completed for email: $email');
+    print(
+      'DEBUG: HtAuthInmemory requestSignInCode completed for email: $email',
+    );
   }
 
   @override
@@ -124,7 +126,9 @@ class HtAuthInmemory implements HtAuthClient {
     print(
       'DEBUG: HtAuthInmemory User $email verified. New user: $_currentUser, token: $_currentToken',
     );
-    print('DEBUG: HtAuthInmemory Pending codes after verification: $_pendingCodes');
+    print(
+      'DEBUG: HtAuthInmemory Pending codes after verification: $_pendingCodes',
+    );
     await Future<void>.delayed(const Duration(milliseconds: 500));
     print('DEBUG: HtAuthInmemory verifySignInCode completed for email: $email');
     return AuthSuccessResponse(user: user, token: _currentToken!);
