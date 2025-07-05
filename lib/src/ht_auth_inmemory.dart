@@ -70,18 +70,35 @@ class HtAuthInmemory implements HtAuthClient {
   }
 
   @override
-  Future<void> requestSignInCode(String email) async {
-    print('DEBUG: HtAuthInmemory requestSignInCode called for email: $email');
+  Future<void> requestSignInCode(
+    String email, {
+    bool isDashboardLogin = false,
+  }) async {
+    print('DEBUG: HtAuthInmemory requestSignInCode called for email: $email, '
+        'isDashboardLogin: $isDashboardLogin');
     if (!email.contains('@') || !email.contains('.')) {
       print(
-        'DEBUG: HtAuthInmemory Invalid email format for $email. Throwing InvalidInputException.',
+        'DEBUG: HtAuthInmemory Invalid email format for $email. Throwing '
+        'InvalidInputException.',
       );
       throw const InvalidInputException('Invalid email format.');
     }
+
+    if (isDashboardLogin && email != 'admin@example.com') {
+      print(
+        'DEBUG: HtAuthInmemory Dashboard login requested for non-admin email '
+        '$email. Throwing UnauthorizedException.',
+      );
+      throw const UnauthorizedException(
+        'Only admin@example.com can access the dashboard.',
+      );
+    }
+
     // Simulate sending a code
     _pendingCodes[email] = '123456'; // Hardcoded for demo
     print(
-      'DEBUG: HtAuthInmemory Generated code 123456 for $email. Pending codes: $_pendingCodes',
+      'DEBUG: HtAuthInmemory Generated code 123456 for $email. Pending codes: '
+      '$_pendingCodes',
     );
     await Future<void>.delayed(const Duration(milliseconds: 500));
     print(
@@ -92,20 +109,33 @@ class HtAuthInmemory implements HtAuthClient {
   @override
   Future<AuthSuccessResponse> verifySignInCode(
     String email,
-    String code,
-  ) async {
+    String code, {
+    bool isDashboardLogin = false,
+  }) async {
     print(
-      'DEBUG: HtAuthInmemory verifySignInCode called for email: $email, code: $code',
+      'DEBUG: HtAuthInmemory verifySignInCode called for email: $email, code: '
+      '$code, isDashboardLogin: $isDashboardLogin',
     );
     if (!email.contains('@') || !email.contains('.')) {
       print(
-        'DEBUG: HtAuthInmemory Invalid email format for $email. Throwing InvalidInputException.',
+        'DEBUG: HtAuthInmemory Invalid email format for $email. Throwing '
+        'InvalidInputException.',
       );
       throw const InvalidInputException('Invalid email format.');
     }
+
+    if (isDashboardLogin && email != 'admin@example.com') {
+      print(
+        'DEBUG: HtAuthInmemory Dashboard login verification for non-admin '
+        'email $email. Throwing NotFoundException.',
+      );
+      throw const NotFoundException('User not found for dashboard access.');
+    }
+
     if (code != _pendingCodes[email]) {
       print(
-        'DEBUG: HtAuthInmemory Invalid or expired code for $email. Expected: ${_pendingCodes[email]}, Got: $code. Throwing AuthenticationException.',
+        'DEBUG: HtAuthInmemory Invalid or expired code for $email. Expected: '
+        '${_pendingCodes[email]}, Got: $code. Throwing AuthenticationException.',
       );
       throw const AuthenticationException('Invalid or expired code.');
     }
@@ -114,7 +144,9 @@ class HtAuthInmemory implements HtAuthClient {
     final user = User(
       id: _uuid.v4(),
       email: email,
-      role: UserRole.standardUser,
+      roles: [
+        isDashboardLogin ? UserRoles.admin : UserRoles.standardUser,
+      ],
     );
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
@@ -124,7 +156,8 @@ class HtAuthInmemory implements HtAuthClient {
     ); // Clear pending code after successful verification
 
     print(
-      'DEBUG: HtAuthInmemory User $email verified. New user: $_currentUser, token: $_currentToken',
+      'DEBUG: HtAuthInmemory User $email verified. New user: $_currentUser, '
+      'token: $_currentToken',
     );
     print(
       'DEBUG: HtAuthInmemory Pending codes after verification: $_pendingCodes',
@@ -137,7 +170,7 @@ class HtAuthInmemory implements HtAuthClient {
   @override
   Future<AuthSuccessResponse> signInAnonymously() async {
     print('DEBUG: HtAuthInmemory signInAnonymously called.');
-    final user = User(id: _uuid.v4(), role: UserRole.guestUser);
+    final user = User(id: _uuid.v4(), roles: [UserRoles.guestUser]);
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
     _authStateController.add(_currentUser);
