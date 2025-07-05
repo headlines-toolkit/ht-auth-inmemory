@@ -23,8 +23,8 @@ This package implements the `HtAuthClient` interface, providing the following in
 
 *   `authStateChanges`: A stream that emits the current authenticated `User` or `null` on state changes.
 *   `getCurrentUser`: Retrieves the currently authenticated `User`.
-*   `requestSignInCode`: Simulates sending a sign-in code to an email.
-*   `verifySignInCode`: Simulates verifying a sign-in code and authenticating a user.
+*   `requestSignInCode`: Simulates sending a sign-in code to an email. This method supports an optional `isDashboardLogin` flag. When `true`, it simulates a privileged flow where only `admin@example.com` is allowed to request a code; otherwise, it throws an `UnauthorizedException`.
+*   `verifySignInCode`: Simulates verifying a sign-in code and authenticating a user. This method also supports an optional `isDashboardLogin` flag. When `true`, it simulates a privileged flow where only `admin@example.com` can successfully verify a code (throwing a `NotFoundException` for other emails) and the authenticated user is assigned the `UserRoles.admin` role.
 *   `signInAnonymously`: Simulates signing in a user anonymously.
 *   `signOut`: Simulates signing out the current user.
 *   `currentToken`: A custom getter to retrieve the simulated authentication token.
