@@ -74,8 +74,10 @@ class HtAuthInmemory implements HtAuthClient {
     String email, {
     bool isDashboardLogin = false,
   }) async {
-    print('DEBUG: HtAuthInmemory requestSignInCode called for email: $email, '
-        'isDashboardLogin: $isDashboardLogin');
+    print(
+      'DEBUG: HtAuthInmemory requestSignInCode called for email: $email, '
+      'isDashboardLogin: $isDashboardLogin',
+    );
     if (!email.contains('@') || !email.contains('.')) {
       print(
         'DEBUG: HtAuthInmemory Invalid email format for $email. Throwing '
@@ -144,9 +146,7 @@ class HtAuthInmemory implements HtAuthClient {
     final user = User(
       id: _uuid.v4(),
       email: email,
-      roles: [
-        isDashboardLogin ? UserRoles.admin : UserRoles.standardUser,
-      ],
+      roles: [if (isDashboardLogin) UserRoles.admin else UserRoles.standardUser],
     );
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
@@ -170,7 +170,7 @@ class HtAuthInmemory implements HtAuthClient {
   @override
   Future<AuthSuccessResponse> signInAnonymously() async {
     print('DEBUG: HtAuthInmemory signInAnonymously called.');
-    final user = User(id: _uuid.v4(), roles: [UserRoles.guestUser]);
+    final user = User(id: _uuid.v4(), roles: const [UserRoles.guestUser]);
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
     _authStateController.add(_currentUser);
