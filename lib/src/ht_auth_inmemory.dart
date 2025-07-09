@@ -1,9 +1,8 @@
-// ignore_for_file: avoid_print, lines_longer_than_80_chars
-
 import 'dart:async';
 
 import 'package:ht_auth_client/ht_auth_client.dart';
 import 'package:ht_shared/ht_shared.dart';
+import 'package:logging/logging.dart';
 import 'package:uuid/uuid.dart';
 
 /// {@template ht_auth_inmemory}
@@ -15,20 +14,24 @@ import 'package:uuid/uuid.dart';
 /// {@endtemplate}
 class HtAuthInmemory implements HtAuthClient {
   /// {@macro ht_auth_inmemory}
-  HtAuthInmemory({this.initialUser, this.initialToken}) {
-    print(
-      'DEBUG: HtAuthInmemory Initializing with initialUser: $initialUser, '
+  HtAuthInmemory({
+    this.initialUser,
+    this.initialToken,
+    Logger? logger,
+  }) : _logger = logger ?? Logger('HtAuthInmemory') {
+    _logger.fine(
+      'Initializing with initialUser: $initialUser, '
       'initialToken: $initialToken',
     );
     _currentUser = initialUser;
     _currentToken = initialToken;
     if (_currentUser != null) {
       _authStateController.add(_currentUser);
-      print('DEBUG: HtAuthInmemory Added initial user to authStateController.');
+      _logger.finer('Added initial user to authStateController.');
     }
-    print('DEBUG: HtAuthInmemory Initialization complete.');
+    _logger.fine('Initialization complete.');
   }
-
+  final Logger _logger;
   final Uuid _uuid = const Uuid();
 
   /// The initial user to set for demonstration purposes.
@@ -46,7 +49,7 @@ class HtAuthInmemory implements HtAuthClient {
 
   @override
   Stream<User?> get authStateChanges {
-    print('DEBUG: HtAuthInmemory authStateChanges getter called.');
+    _logger.finer('authStateChanges getter called.');
     return _authStateController.stream;
   }
 
@@ -55,17 +58,15 @@ class HtAuthInmemory implements HtAuthClient {
   /// This is a custom getter for the in-memory client to allow the
   /// repository to retrieve the token after successful authentication.
   String? get currentToken {
-    print(
-      'DEBUG: HtAuthInmemory currentToken getter called. Returning $_currentToken',
-    );
+    _logger.finer('currentToken getter called. Returning $_currentToken');
     return _currentToken;
   }
 
   @override
   Future<User?> getCurrentUser() async {
-    print('DEBUG: HtAuthInmemory getCurrentUser called.');
+    _logger.fine('getCurrentUser called.');
     await Future<void>.delayed(const Duration(milliseconds: 100));
-    print('DEBUG: HtAuthInmemory getCurrentUser returning $_currentUser');
+    _logger.fine('getCurrentUser returning $_currentUser');
     return _currentUser;
   }
 
@@ -74,38 +75,33 @@ class HtAuthInmemory implements HtAuthClient {
     String email, {
     bool isDashboardLogin = false,
   }) async {
-    print(
-      'DEBUG: HtAuthInmemory requestSignInCode called for email: $email, '
+    _logger.fine(
+      'requestSignInCode called for email: $email, '
       'isDashboardLogin: $isDashboardLogin',
     );
     if (!email.contains('@') || !email.contains('.')) {
-      print(
-        'DEBUG: HtAuthInmemory Invalid email format for $email. Throwing '
-        'InvalidInputException.',
+      _logger.warning(
+        'Invalid email format for $email. Throwing InvalidInputException.',
       );
       throw const InvalidInputException('Invalid email format.');
     }
 
     if (isDashboardLogin && email != 'admin@example.com') {
-      print(
-        'DEBUG: HtAuthInmemory Dashboard login requested for non-admin email '
-        '$email. Throwing UnauthorizedException.',
+      _logger.warning(
+        'Dashboard login requested for non-admin email $email. '
+        'Throwing UnauthorizedException.',
       );
       throw const UnauthorizedException(
         'Only admin@example.com can access the dashboard.',
       );
     }
 
-    // Simulate sending a code
     _pendingCodes[email] = '123456'; // Hardcoded for demo
-    print(
-      'DEBUG: HtAuthInmemory Generated code 123456 for $email. Pending codes: '
-      '$_pendingCodes',
+    _logger.info(
+      'Generated code 123456 for $email. Pending codes: $_pendingCodes',
     );
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    print(
-      'DEBUG: HtAuthInmemory requestSignInCode completed for email: $email',
-    );
+    _logger.fine('requestSignInCode completed for email: $email');
   }
 
   @override
@@ -114,35 +110,33 @@ class HtAuthInmemory implements HtAuthClient {
     String code, {
     bool isDashboardLogin = false,
   }) async {
-    print(
-      'DEBUG: HtAuthInmemory verifySignInCode called for email: $email, code: '
+    _logger.fine(
+      'verifySignInCode called for email: $email, code: $code, '
       '$code, isDashboardLogin: $isDashboardLogin',
     );
     if (!email.contains('@') || !email.contains('.')) {
-      print(
-        'DEBUG: HtAuthInmemory Invalid email format for $email. Throwing '
-        'InvalidInputException.',
+      _logger.warning(
+        'Invalid email format for $email. Throwing InvalidInputException.',
       );
       throw const InvalidInputException('Invalid email format.');
     }
 
     if (isDashboardLogin && email != 'admin@example.com') {
-      print(
-        'DEBUG: HtAuthInmemory Dashboard login verification for non-admin '
-        'email $email. Throwing NotFoundException.',
+      _logger.warning(
+        'Dashboard login verification for non-admin email $email. '
+        'Throwing NotFoundException.',
       );
       throw const NotFoundException('User not found for dashboard access.');
     }
 
     if (code != _pendingCodes[email]) {
-      print(
-        'DEBUG: HtAuthInmemory Invalid or expired code for $email. Expected: '
+      _logger.warning(
+        'Invalid or expired code for $email. Expected: '
         '${_pendingCodes[email]}, Got: $code. Throwing AuthenticationException.',
       );
       throw const AuthenticationException('Invalid or expired code.');
     }
 
-    // Simulate user creation/login
     final user = User(
       id: _uuid.v4(),
       email: email,
@@ -161,27 +155,24 @@ class HtAuthInmemory implements HtAuthClient {
       ),
     );
     _currentUser = user;
-    _currentToken = _uuid.v4(); // Generate a new token
+    _currentToken = _uuid.v4();
     _authStateController.add(_currentUser);
     _pendingCodes.remove(
       email,
-    ); // Clear pending code after successful verification
+    );
 
-    print(
-      'DEBUG: HtAuthInmemory User $email verified. New user: $_currentUser, '
-      'token: $_currentToken',
+    _logger.info(
+      'User $email verified. New user: $_currentUser, token: $_currentToken',
     );
-    print(
-      'DEBUG: HtAuthInmemory Pending codes after verification: $_pendingCodes',
-    );
+    _logger.finer('Pending codes after verification: $_pendingCodes');
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    print('DEBUG: HtAuthInmemory verifySignInCode completed for email: $email');
+    _logger.fine('verifySignInCode completed for email: $email');
     return AuthSuccessResponse(user: user, token: _currentToken!);
   }
 
   @override
   Future<AuthSuccessResponse> signInAnonymously() async {
-    print('DEBUG: HtAuthInmemory signInAnonymously called.');
+    _logger.fine('signInAnonymously called.');
     final user = User(
       id: _uuid.v4(),
       email: 'anonymous@example.com',
@@ -196,30 +187,30 @@ class HtAuthInmemory implements HtAuthClient {
       ),
     );
     _currentUser = user;
-    _currentToken = _uuid.v4(); // Generate a new token
+    _currentToken = _uuid.v4();
     _authStateController.add(_currentUser);
 
-    print(
-      'DEBUG: HtAuthInmemory Signed in anonymously. User: $_currentUser, token: $_currentToken',
+    _logger.info(
+      'Signed in anonymously. User: $_currentUser, token: $_currentToken',
     );
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    print('DEBUG: HtAuthInmemory signInAnonymously completed.');
+    _logger.fine('signInAnonymously completed.');
     return AuthSuccessResponse(user: user, token: _currentToken!);
   }
 
   @override
   Future<void> signOut() async {
-    print('DEBUG: HtAuthInmemory signOut called.');
+    _logger.fine('signOut called.');
     _currentUser = null;
     _currentToken = null;
     _authStateController.add(null);
-    _pendingCodes.clear(); // Clear all pending codes on sign out
+    _pendingCodes.clear();
 
-    print(
-      'DEBUG: HtAuthInmemory User signed out. Current user: $_currentUser, token: $_currentToken',
+    _logger.info(
+      'User signed out. Current user: $_currentUser, token: $_currentToken',
     );
-    print('DEBUG: HtAuthInmemory Pending codes after sign out: $_pendingCodes');
+    _logger.finer('Pending codes after sign out: $_pendingCodes');
     await Future<void>.delayed(const Duration(milliseconds: 500));
-    print('DEBUG: HtAuthInmemory signOut completed.');
+    _logger.fine('signOut completed.');
   }
 }
