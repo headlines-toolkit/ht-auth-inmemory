@@ -146,12 +146,17 @@ class HtAuthInmemory implements HtAuthClient {
     final user = User(
       id: _uuid.v4(),
       email: email,
-      appRole: isDashboardLogin ? AppUserRole.premiumUser : AppUserRole.standardUser,
-      dashboardRole: isDashboardLogin ? DashboardUserRole.admin : DashboardUserRole.none,
+      appRole: isDashboardLogin
+          ? AppUserRole.premiumUser
+          : AppUserRole.standardUser,
+      dashboardRole: isDashboardLogin
+          ? DashboardUserRole.admin
+          : DashboardUserRole.none,
       createdAt: DateTime.now(),
       feedActionStatus: Map.fromEntries(
         FeedActionType.values.map(
-          (type) => MapEntry(type, const UserFeedActionStatus(isCompleted: false)),
+          (type) =>
+              MapEntry(type, const UserFeedActionStatus(isCompleted: false)),
         ),
       ),
     );
@@ -185,7 +190,8 @@ class HtAuthInmemory implements HtAuthClient {
       createdAt: DateTime.now(),
       feedActionStatus: Map.fromEntries(
         FeedActionType.values.map(
-          (type) => MapEntry(type, const UserFeedActionStatus(isCompleted: false)),
+          (type) =>
+              MapEntry(type, const UserFeedActionStatus(isCompleted: false)),
         ),
       ),
     );
