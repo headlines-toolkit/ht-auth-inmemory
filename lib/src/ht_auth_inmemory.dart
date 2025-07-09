@@ -14,11 +14,8 @@ import 'package:uuid/uuid.dart';
 /// {@endtemplate}
 class HtAuthInmemory implements HtAuthClient {
   /// {@macro ht_auth_inmemory}
-  HtAuthInmemory({
-    this.initialUser,
-    this.initialToken,
-    Logger? logger,
-  }) : _logger = logger ?? Logger('HtAuthInmemory') {
+  HtAuthInmemory({this.initialUser, this.initialToken, Logger? logger})
+    : _logger = logger ?? Logger('HtAuthInmemory') {
     _logger.fine(
       'Initializing with initialUser: $initialUser, '
       'initialToken: $initialToken',
@@ -157,9 +154,7 @@ class HtAuthInmemory implements HtAuthClient {
     _currentUser = user;
     _currentToken = _uuid.v4();
     _authStateController.add(_currentUser);
-    _pendingCodes.remove(
-      email,
-    );
+    _pendingCodes.remove(email);
 
     _logger.info(
       'User $email verified. New user: $_currentUser, token: $_currentToken',
