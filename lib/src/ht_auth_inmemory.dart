@@ -146,7 +146,14 @@ class HtAuthInmemory implements HtAuthClient {
     final user = User(
       id: _uuid.v4(),
       email: email,
-      roles: [if (isDashboardLogin) UserRoles.admin else UserRoles.standardUser],
+      appRole: isDashboardLogin ? AppUserRole.premiumUser : AppUserRole.standardUser,
+      dashboardRole: isDashboardLogin ? DashboardUserRole.admin : DashboardUserRole.none,
+      createdAt: DateTime.now(),
+      feedActionStatus: Map.fromEntries(
+        FeedActionType.values.map(
+          (type) => MapEntry(type, const UserFeedActionStatus(isCompleted: false)),
+        ),
+      ),
     );
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
@@ -170,7 +177,18 @@ class HtAuthInmemory implements HtAuthClient {
   @override
   Future<AuthSuccessResponse> signInAnonymously() async {
     print('DEBUG: HtAuthInmemory signInAnonymously called.');
-    final user = User(id: _uuid.v4(), roles: const [UserRoles.guestUser]);
+    final user = User(
+      id: _uuid.v4(),
+      email: 'anonymous@example.com',
+      appRole: AppUserRole.guestUser,
+      dashboardRole: DashboardUserRole.none,
+      createdAt: DateTime.now(),
+      feedActionStatus: Map.fromEntries(
+        FeedActionType.values.map(
+          (type) => MapEntry(type, const UserFeedActionStatus(isCompleted: false)),
+        ),
+      ),
+    );
     _currentUser = user;
     _currentToken = _uuid.v4(); // Generate a new token
     _authStateController.add(_currentUser);
